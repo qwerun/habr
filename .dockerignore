@@ -1,0 +1,4 @@
+habr-auth-go/migrations/
+.git
+.idea
+postgres-data

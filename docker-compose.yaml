@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:16
+    container_name: auth-db
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U authuser -d authdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: krowty999
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./habr-auth-go/migrations/init_scripts:/docker-entrypoint-initdb.d
+      - auth-db-data:/var/lib/postgresql/data
+
+
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    ports:
+      - "6380:6379"
+#    volumes:
+#      - ./redisdata:/data
+    command: [ "redis-server", "--requirepass", "pass23j4j32j", "--appendonly", "yes", "--appendfsync", "everysec" ]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "pass23j4j32j", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  auth-service:
+    restart: always
+    build:
+      context: ./habr-auth-go
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_USER: authuser
+      DB_PASSWORD: krowty999
+      DB_NAME: authdb
+      DB_PORT: 5432
+      REDIS_PASSWORD: pass23j4j32j
+      REDIS_ADDR: redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+
+volumes:
+  auth-db-data:
