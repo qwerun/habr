@@ -17,6 +17,7 @@ func NewConsumer() (*Consumer, error) {
 
 	config := sarama.NewConfig()
 	config.Version = sarama.V3_7_2_0
+	config.Consumer.Return.Errors = true
 
 	consumerGroup, err := sarama.NewConsumerGroup(brokers, group, config)
 	if err != nil {
