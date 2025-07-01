@@ -3,17 +3,24 @@ package kafka
 import (
 	"github.com/IBM/sarama"
 	"os"
+	"strings"
 )
 
-type Consumer struct {
-	Group  sarama.ConsumerGroup
-	Topics []string
+type KafkaConsumerExplorer struct {
+	ConsumerGroup sarama.ConsumerGroup
+	Topics        []string
 }
 
-func NewConsumer() (*Consumer, error) {
-	brokers := []string{os.Getenv("KAFKA_BROKER")}
+func NewKafkaConsumerExplorer(consumerGroup sarama.ConsumerGroup, topics []string) *KafkaConsumerExplorer {
+	return &KafkaConsumerExplorer{
+		ConsumerGroup: consumerGroup,
+		Topics:        topics,
+	}
+}
+
+func NewKafkaConsumerGroup() (sarama.ConsumerGroup, error) {
+	brokers := strings.Split(os.Getenv("KAFKA_BROKER"), ",")
 	group := os.Getenv("KAFKA_GROUP")
-	topics := []string{os.Getenv("KAFKA_TOPIC")}
 
 	config := sarama.NewConfig()
 	config.Version = sarama.V3_7_2_0
@@ -23,8 +30,5 @@ func NewConsumer() (*Consumer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Consumer{
-		Group:  consumerGroup,
-		Topics: topics,
-	}, nil
+	return consumerGroup, nil
 }

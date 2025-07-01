@@ -9,13 +9,13 @@ import (
 )
 
 type Consumer struct {
-	*kafka.Consumer
+	*kafka.KafkaConsumerExplorer
 }
 
 type Handler struct {
 }
 
-func NewConsumer(consumer *kafka.Consumer) *Consumer {
+func NewConsumer(consumer *kafka.KafkaConsumerExplorer) *Consumer {
 	return &Consumer{consumer}
 }
 
@@ -30,7 +30,7 @@ func (c *Consumer) Notify(ctx context.Context) error {
 		default:
 		}
 
-		err := c.Group.Consume(ctx, c.Topics, handler)
+		err := c.ConsumerGroup.Consume(ctx, c.Topics, handler)
 		if err != nil {
 			if ctx.Err() != nil {
 				log.Println("Shutdown by context")

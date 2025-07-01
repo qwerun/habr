@@ -48,7 +48,7 @@ services:
       DB_PORT: 5432
       REDIS_PASSWORD: pass23j4j32j
       REDIS_ADDR: redis:6379
-      KAFKA_BROKER: kafka1:9092
+      KAFKA_BROKER: kafka1:9092,kafka2:9092,kafka3:9092
       KAFKA_TOPIC: my-topic
     ports:
       - "8081:8081"

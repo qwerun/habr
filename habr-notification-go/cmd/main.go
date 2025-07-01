@@ -11,11 +11,12 @@ import (
 )
 
 func main() {
-	kc, err := kafka.NewConsumer()
+	kc, err := kafka.NewKafkaConsumerGroup()
 	if err != nil {
 		log.Fatalf("failed to create kafka consumer: %v", err)
 	}
-	defer kc.Group.Close()
+	kExplorer := kafka.NewKafkaConsumerExplorer(kc, []string{os.Getenv("KAFKA_TOPIC")})
+	defer kExplorer.ConsumerGroup.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -29,7 +30,7 @@ func main() {
 		signal.Stop(sigchan)
 	}()
 
-	ic := internal.NewConsumer(kc)
+	ic := internal.NewConsumer(kExplorer)
 	err = ic.Notify(ctx)
 	if err != nil {
 		log.Fatalf("failed to use kafka consumer: %v", err)
