@@ -44,13 +44,22 @@ func (c *Consumer) Notify(ctx context.Context) error {
 }
 
 func (h *Handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	for message := range claim.Messages() {
+		// отправка на почту была бы здесь в отдельной функции
+		log.Printf("Message claimed: value = %s, timestamp = %v, topic = %s, partition = %d, offset = %d",
+			string(message.Value), message.Timestamp, message.Topic, message.Partition, message.Offset)
+
+		session.MarkMessage(message, "")
+	}
 	return nil
 }
 
 func (h *Handler) Setup(_ sarama.ConsumerGroupSession) error {
+	log.Println("Consumer group setup")
 	return nil
 }
 
 func (h *Handler) Cleanup(_ sarama.ConsumerGroupSession) error {
+	log.Println("Consumer group cleanup")
 	return nil
 }

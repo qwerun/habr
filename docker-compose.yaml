@@ -48,6 +48,8 @@ services:
       DB_PORT: 5432
       REDIS_PASSWORD: pass23j4j32j
       REDIS_ADDR: redis:6379
+      KAFKA_BROKER: kafka1:9092
+      KAFKA_TOPIC: my-topic
     ports:
       - "8081:8081"
     depends_on:
@@ -55,6 +57,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      kafka1:
+        condition: service_started
+      kafka2:
+        condition: service_started
+      kafka3:
+        condition: service_started
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -111,6 +119,20 @@ services:
       - kafka2
       - kafka3
     entrypoint: [ "sh", "-c", "sleep 20 && kafka-topics --create --topic my-topic --partitions 1 --replication-factor 3 --if-not-exists --bootstrap-server kafka1:9092,kafka2:9092,kafka3:9092" ]
+
+  notification-service:
+    restart: always
+    build:
+      context: ./habr-notification-go
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BROKER: kafka1:9092,kafka2:9092,kafka3:9092
+      KAFKA_GROUP: habr-notification-group
+      KAFKA_TOPIC: my-topic
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
 
 
 volumes:

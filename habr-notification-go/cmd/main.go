@@ -25,6 +25,7 @@ func main() {
 	go func() {
 		<-sigchan
 		cancel()
+		log.Println("Start graceful shutdown")
 		signal.Stop(sigchan)
 	}()
 
