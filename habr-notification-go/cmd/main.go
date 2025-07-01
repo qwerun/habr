@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -15,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create kafka consumer: %v", err)
 	}
-	kExplorer := kafka.NewKafkaConsumerExplorer(kc, []string{os.Getenv("KAFKA_TOPIC")})
+	kExplorer := kafka.NewKafkaConsumerExplorer(kc, strings.Split(os.Getenv("KAFKA_TOPIC"), ","))
 	defer kExplorer.ConsumerGroup.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
