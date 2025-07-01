@@ -104,7 +104,6 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-  # init-контейнер для создания топика
   kafka-init:
     image: confluentinc/cp-kafka:7.6.1
     depends_on:
