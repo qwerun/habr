@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/qwerun/habr-auth-go/internal/handlers"
 	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
 	"github.com/qwerun/habr-auth-go/pkg/kafka"
@@ -31,7 +30,6 @@ func main() {
 	defer pExplorer.Producer.Close()
 	rExplorer := redis.NewRedisExplorer(rdb)
 	explorer := postgres.NewExplorer(db)
-	fmt.Println("PRIKOL")
 	userRepo := user_repository.New(explorer, rExplorer, pExplorer)
 	handler, err := handlers.NewMux(userRepo)
 	if err != nil {

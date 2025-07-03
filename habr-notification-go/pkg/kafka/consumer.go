@@ -2,25 +2,22 @@ package kafka
 
 import (
 	"github.com/IBM/sarama"
+	"log"
 	"os"
 	"strings"
 )
 
-type KafkaConsumerExplorer struct {
-	ConsumerGroup sarama.ConsumerGroup
-	Topics        []string
-}
-
-func NewKafkaConsumerExplorer(consumerGroup sarama.ConsumerGroup, topics []string) *KafkaConsumerExplorer {
-	return &KafkaConsumerExplorer{
-		ConsumerGroup: consumerGroup,
-		Topics:        topics,
-	}
-}
-
 func NewKafkaConsumerGroup() (sarama.ConsumerGroup, error) {
-	brokers := strings.Split(os.Getenv("KAFKA_BROKER"), ",")
+	brokersEnv := os.Getenv("KAFKA_BROKER")
+	if brokersEnv == "" {
+		log.Fatalf("KAFKA_BROKER not set")
+	}
+	brokers := strings.Split(brokersEnv, ",")
+
 	group := os.Getenv("KAFKA_GROUP")
+	if group == "" {
+		log.Fatalf("KAFKA_GROUP not set")
+	}
 
 	config := sarama.NewConfig()
 	config.Version = sarama.V3_7_2_0
