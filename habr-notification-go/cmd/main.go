@@ -9,6 +9,12 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
+)
+
+const (
+	initialBackoff = 1 * time.Second
+	maxBackoff     = 30 * time.Second
 )
 
 func main() {
@@ -16,7 +22,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create kafka consumer: %v", err)
 	}
-	defer kc.Close()
+	defer func() {
+		if err := kc.Close(); err != nil {
+			log.Printf("Ошибка при закрытии Kafka consumer: %v", err)
+		}
+	}()
 	topicsEnv := os.Getenv("KAFKA_TOPIC")
 	if topicsEnv == "" {
 		log.Fatalf("KAFKA_TOPIC not set")
@@ -38,12 +48,26 @@ func main() {
 		signal.Stop(sigchan)
 	}()
 
+	backoff := initialBackoff
+
 	for {
-		if err := kc.Consume(ctx, topics, kafkaHandler); err != nil {
-			log.Printf("kafka consume error: %v", err)
-			if ctx.Err() != nil {
-				break
-			}
+		err := kc.Consume(ctx, topics, kafkaHandler)
+		if ctx.Err() != nil {
+			break
 		}
+
+		if err != nil {
+			log.Printf("kafka consume error: %v", err)
+			log.Printf("Waiting %s before next consume attempt", backoff)
+			time.Sleep(backoff)
+
+			backoff *= 2
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+			continue
+		}
+
+		backoff = initialBackoff
 	}
 }
