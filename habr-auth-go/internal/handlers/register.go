@@ -52,7 +52,10 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 
-	// Kafka - Здесь будет отправка сообщения в кафку
+	err = s.explorer.SendVerificationCode(req.Email, code)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 
 	req.PasswordHash = strconv.Itoa(code) //заглушка,чтобы посмотреть сформированный код подтверждения
 	req.Email = id                        //заглушка id юзера буду возвращать в response
