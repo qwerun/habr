@@ -20,6 +20,5 @@ func (r *Repository) SendVerificationCode(email string, code int) error {
 		log.Printf("Failed to SendVerificationCode: %v", err)
 		return err
 	}
-
 	return nil
 }

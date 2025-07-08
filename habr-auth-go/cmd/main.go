@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/IBM/sarama"
 	"github.com/qwerun/habr-auth-go/internal/handlers"
 	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
 	"github.com/qwerun/habr-auth-go/pkg/kafka"
@@ -27,7 +28,12 @@ func main() {
 	}
 
 	pExplorer := kafka.NewKafkaExplorer(pc, strings.Split(os.Getenv("KAFKA_TOPIC"), ","))
-	defer pExplorer.Producer.Close()
+	defer func(Producer sarama.SyncProducer) {
+		err = Producer.Close()
+		if err != nil {
+			log.Fatalf("kafka close producer: %v", err)
+		}
+	}(pExplorer.Producer)
 	rExplorer := redis.NewRedisExplorer(rdb)
 	explorer := postgres.NewExplorer(db)
 	userRepo := user_repository.New(explorer, rExplorer, pExplorer)
@@ -36,6 +42,9 @@ func main() {
 		panic(err)
 	}
 
-	http.ListenAndServe(":8081", handler)
+	err = http.ListenAndServe(":8081", handler)
+	if err != nil {
+		log.Fatalf("start server: %v", err)
+	}
 
 }
