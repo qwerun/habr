@@ -14,6 +14,8 @@ import (
 var (
 	ErrEmailAlreadyExists    = errors.New("user with this email already exists")
 	ErrNicknameAlreadyExists = errors.New("user with this nickname already exists")
+	ErrCodeCheckNotFound     = errors.New("verification code not found")
+	ErrVerifyAccount         = errors.New("verify account error")
 )
 
 func (r *Repository) Create(user *models.User) (string, error) {
@@ -55,4 +57,42 @@ func (r *Repository) SetVerificationCode(email string) (int, error) {
 		return 0, err
 	}
 	return code, nil
+}
+
+func (r *Repository) CheckVerificationCode(email, code string) error {
+	ctx := context.Background()
+	validCode, err := r.redisExplorer.RDB.Get(ctx, email).Result()
+	if err != nil {
+		log.Printf("Could not get value in Redis: %v", err)
+		return err
+	}
+	if validCode != code {
+		log.Printf("%s: email: %v checkCode: %v validCode: %v", ErrCodeCheckNotFound, email, code, validCode)
+		return ErrCodeCheckNotFound
+	}
+	return nil
+}
+
+func (r *Repository) VerifiedAccount(email string) error {
+	query := `
+        UPDATE users
+        SET is_verified = true
+        WHERE email = $1
+    `
+	res, err := r.explorer.DB.ExecContext(context.Background(), query, email)
+	if err != nil {
+		log.Printf("unable to mark user %q as verified: %w", email, err)
+		return ErrVerifyAccount
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("could not get RowsAffected for user %q: %w", email, err)
+		return ErrVerifyAccount
+	}
+	if rows == 0 {
+		log.Printf("user not found %q: %w", email, err)
+		return ErrVerifyAccount
+	}
+
+	return nil
 }

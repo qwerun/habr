@@ -13,8 +13,8 @@ func NewMux(explorer *user_repository.Repository) (http.Handler, error) {
 	server := &Server{explorer: explorer}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/register", server.register)
-	mux.HandleFunc("/api/v1/verify-email", server.defaults)
+	mux.HandleFunc("/api/v1/verify-email", server.verify)
 	mux.HandleFunc("/api/v1/login", server.defaults)
-	mux.HandleFunc("/api/v1/password-reset", server.defaults)
+	mux.HandleFunc("/api/v1/password-reset", server.passwordReset)
 	return onlyPOST(mux), nil
 }
