@@ -1,3 +1,5 @@
+Билд проекта  docker compose up -d --build
+
 Порядок выполнения команд для полноценного тестирования
 1. curl -v -X POST http://localhost:8081/api/v1/register   -H "Content-Type: application/json"   -d '{"email": "abiojppppp@mail.com", "password": "Hewer)8p", "nickname": "ppppps32"}'
 
@@ -17,7 +19,6 @@ curl -v -X POST http://localhost:8081/api/v1/verify-email -H "Content-Type: appl
 curl -v -X POST http://localhost:8081/api/v1/change-password -H "Content-Type: application/json"   -d '{"email": "abiojppppp@mail.com", "password": "Hewer)8p", "newPassword": "Hetui(112"}'
 Если в ответе возвращается {"success":true}  значит пароль успешно сменился
 
-6. 
 
 
 
