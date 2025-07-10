@@ -2,6 +2,7 @@ package user_repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -16,6 +17,7 @@ var (
 	ErrNicknameAlreadyExists = errors.New("user with this nickname already exists")
 	ErrCodeCheckNotFound     = errors.New("verification code not found")
 	ErrVerifyAccount         = errors.New("verify account error")
+	ErrChangePassword        = errors.New("change password error")
 )
 
 func (r *Repository) Create(user *models.User) (string, error) {
@@ -42,7 +44,7 @@ func (r *Repository) Create(user *models.User) (string, error) {
 				return "", ErrNicknameAlreadyExists
 			}
 		}
-		log.Printf("Failed registration insert error: %v", err)
+		log.Printf("Create: Failed registration insert error: %v", err)
 		return "", fmt.Errorf("rie")
 	}
 	return id, nil
@@ -53,7 +55,7 @@ func (r *Repository) SetVerificationCode(email string) (int, error) {
 	code := rand.Intn(900000) + 100000
 	err := r.redisExplorer.RDB.Set(ctx, email, code, 10*time.Minute).Err()
 	if err != nil {
-		log.Printf("Could not set value in Redis: %v", err)
+		log.Printf("SetVerificationCode: Could not set value in Redis: %v", err)
 		return 0, err
 	}
 	return code, nil
@@ -63,11 +65,11 @@ func (r *Repository) CheckVerificationCode(email, code string) error {
 	ctx := context.Background()
 	validCode, err := r.redisExplorer.RDB.Get(ctx, email).Result()
 	if err != nil {
-		log.Printf("Could not get value in Redis: %v", err)
+		log.Printf("CheckVerificationCode: Could not get value in Redis: %v", err)
 		return err
 	}
 	if validCode != code {
-		log.Printf("%s: email: %v checkCode: %v validCode: %v", ErrCodeCheckNotFound, email, code, validCode)
+		log.Printf("CheckVerificationCode: %s: email: %v checkCode: %v validCode: %v", ErrCodeCheckNotFound, email, code, validCode)
 		return ErrCodeCheckNotFound
 	}
 	return nil
@@ -81,17 +83,62 @@ func (r *Repository) VerifiedAccount(email string) error {
     `
 	res, err := r.explorer.DB.ExecContext(context.Background(), query, email)
 	if err != nil {
-		log.Printf("unable to mark user %q as verified: %w", email, err)
+		log.Printf("VerifiedAccount: unable to mark user %q as verified: %w", email, err)
 		return ErrVerifyAccount
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
-		log.Printf("could not get RowsAffected for user %q: %w", email, err)
+		log.Printf("VerifiedAccount: could not get RowsAffected for user %q: %w", email, err)
 		return ErrVerifyAccount
 	}
 	if rows == 0 {
-		log.Printf("user not found %q: %w", email, err)
+		log.Printf("VerifiedAccount: user not found %q: %w", email, err)
 		return ErrVerifyAccount
+	}
+
+	return nil
+}
+
+func (r *Repository) GetPassHash(email string) (string, error) {
+	query := `
+        SELECT password_hash
+          FROM users
+         WHERE email = $1
+    `
+	var hash string
+
+	err := r.explorer.DB.QueryRowContext(context.Background(), query, email).Scan(&hash)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("GetPassHash: no rows: %w", err)
+			return "", ErrChangePassword
+		}
+		log.Printf("GetPassHash: scan row: %w", err)
+		return "", ErrChangePassword
+	}
+
+	return hash, nil
+}
+
+func (r *Repository) SetNewHash(email, hash string) error {
+	query := `
+        UPDATE users
+        SET password_hash = $1
+        WHERE email = $2
+    `
+	res, err := r.explorer.DB.ExecContext(context.Background(), query, hash, email)
+	if err != nil {
+		log.Printf("SetNewHash: unable to change hash password %q as verified: %w", email, err)
+		return ErrChangePassword
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("SetNewHash: could not get RowsAffected for user %q: %w", email, err)
+		return ErrChangePassword
+	}
+	if rows == 0 {
+		log.Printf("SetNewHash: user not found %q: %w", email, err)
+		return ErrChangePassword
 	}
 
 	return nil

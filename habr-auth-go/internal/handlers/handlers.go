@@ -15,6 +15,6 @@ func NewMux(explorer *user_repository.Repository) (http.Handler, error) {
 	mux.HandleFunc("/api/v1/register", server.register)
 	mux.HandleFunc("/api/v1/verify-email", server.verify)
 	mux.HandleFunc("/api/v1/login", server.defaults)
-	mux.HandleFunc("/api/v1/password-reset", server.passwordReset)
+	mux.HandleFunc("/api/v1/change-password", server.changePassword)
 	return onlyPOST(mux), nil
 }
