@@ -4,4 +4,3 @@ postgres-data
 .vscode
 *.swp
 *.log
-*.md
