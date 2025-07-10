@@ -3,14 +3,15 @@ module github.com/qwerun/habr-auth-go
 go 1.24.1
 
 require (
+	github.com/IBM/sarama v1.45.2
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.5
+	github.com/redis/go-redis/v9 v9.10.0
 	golang.org/x/crypto v0.38.0
 )
 
 require (
-	github.com/IBM/sarama v1.45.2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -33,7 +34,6 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/redis/go-redis/v9 v9.10.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/text v0.25.0 // indirect

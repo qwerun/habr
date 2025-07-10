@@ -9,7 +9,6 @@ import (
 	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 func (s *Server) register(w http.ResponseWriter, r *http.Request) {
@@ -57,10 +56,9 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 
-	req.PasswordHash = strconv.Itoa(code) //заглушка,чтобы посмотреть сформированный код подтверждения
-	req.Email = id                        //заглушка id юзера буду возвращать в response
-
-	response := req
+	response := map[string]string{
+		"id": id,
+	}
 
 	if err = writeJSON(w, response, http.StatusOK); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
