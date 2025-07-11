@@ -17,7 +17,7 @@ var (
 	ErrNicknameAlreadyExists = errors.New("user with this nickname already exists")
 	ErrCodeCheckNotFound     = errors.New("verification code not found")
 	ErrVerifyAccount         = errors.New("verify account error")
-	ErrChangePassword        = errors.New("change password error")
+	ErrBadRequest            = errors.New("Bad request")
 )
 
 func (r *Repository) Create(user *models.User) (string, error) {
@@ -111,10 +111,10 @@ func (r *Repository) GetPassHash(email string) (string, error) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Printf("GetPassHash: no rows: %w", err)
-			return "", ErrChangePassword
+			return "", ErrBadRequest
 		}
 		log.Printf("GetPassHash: scan row: %w", err)
-		return "", ErrChangePassword
+		return "", ErrBadRequest
 	}
 
 	return hash, nil
@@ -129,16 +129,16 @@ func (r *Repository) SetNewHash(email, hash string) error {
 	res, err := r.explorer.DB.ExecContext(context.Background(), query, hash, email)
 	if err != nil {
 		log.Printf("SetNewHash: unable to change hash password %q as verified: %w", email, err)
-		return ErrChangePassword
+		return ErrBadRequest
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
 		log.Printf("SetNewHash: could not get RowsAffected for user %q: %w", email, err)
-		return ErrChangePassword
+		return ErrBadRequest
 	}
 	if rows == 0 {
 		log.Printf("SetNewHash: user not found %q: %w", email, err)
-		return ErrChangePassword
+		return ErrBadRequest
 	}
 
 	return nil

@@ -13,7 +13,7 @@ docker logs df6273237d51
 
 4. Далее нужно верифицировать аккаунт, выполнив команду
 curl -v -X POST http://localhost:8081/api/v1/verify-email -H "Content-Type: application/json"   -d '{"email": "abiojppppp@mail.com", "code": "446615"}'
-Если в ответе отображается {"check":true} , значит аккаунт успешно верифицирован и доступна операция - логин
+Если в ответе отображается {"success":true} , значит аккаунт успешно верифицирован и доступна операция - логин
 
 5. Также можно сменить пароль через ручку /api/v1/change-password
 curl -v -X POST http://localhost:8081/api/v1/change-password -H "Content-Type: application/json"   -d '{"email": "abiojppppp@mail.com", "password": "Hewer)8p", "newPassword": "Hetui(112"}'
