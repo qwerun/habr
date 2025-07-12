@@ -4,6 +4,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/qwerun/habr-auth-go/internal/handlers"
 	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
+	"github.com/qwerun/habr-auth-go/pkg/jwtManager"
 	"github.com/qwerun/habr-auth-go/pkg/kafka"
 	"github.com/qwerun/habr-auth-go/pkg/postgres"
 	"github.com/qwerun/habr-auth-go/pkg/redis"
@@ -26,6 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("kafka: %v", err)
 	}
+	accessTime, refreshTime, keyWord := jwtManager.NewJwtInfo()
 
 	pExplorer := kafka.NewKafkaExplorer(pc, strings.Split(os.Getenv("KAFKA_TOPIC"), ","))
 	defer func(Producer sarama.SyncProducer) {
@@ -35,8 +37,9 @@ func main() {
 		}
 	}(pExplorer.Producer)
 	rExplorer := redis.NewRedisExplorer(rdb)
+	jwtExplorer := jwtManager.NewJwtManager(keyWord, accessTime, refreshTime)
 	explorer := postgres.NewExplorer(db)
-	userRepo := user_repository.New(explorer, rExplorer, pExplorer)
+	userRepo := user_repository.New(explorer, rExplorer, pExplorer, jwtExplorer)
 	handler, err := handlers.NewMux(userRepo)
 	if err != nil {
 		panic(err)
