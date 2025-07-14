@@ -26,6 +26,5 @@ curl -v -X POST http://localhost:8081/api/v1/change-password -H "Content-Type: a
 
 7. Также в любой момент, пока действителен refresh токен, можно обновить access и refresh токены, если выполнить
 curl -v -X POST http://localhost:8081/api/v1/refresh -H "Content-Type: application/json" -d '{"access":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZjI2MmMyNS0zMzE4LTQ5ZDgtOTk2OS02N2Y0ZGNmNWJmMDUiLCJleHAiOjE3NTI0ODAyMDIsImlhdCI6MTc1MjQ3OTYwMiwianRpIjoiMTIzIn0.jncFY6vZAGoFKAxzOxw6Mv4pv4tNAFmmhNJPmEuFV9o","refresh":"8BIdUvHdxKBqUbWGE8xwywmJFcKrtaYXNu_qes3BOpk","fingerprint":"123"}'
-
 И в ответ можно получить новые токены
 {"access":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZjI2MmMyNS0zMzE4LTQ5ZDgtOTk2OS02N2Y0ZGNmNWJmMDUiLCJleHAiOjE3NTI0ODAyMDIsImlhdCI6MTc1MjQ3OTYwMiwianRpIjoiMTIzIn0.99pvy_IXS5jbsSNm5Saqa19IP3Pz5HVf9loNHQfb_Gw","refresh":"TV_lvSlV57rVUYW5YWqnQL5SZ3uMc2rBwPWN3Rxoiwg","fingerprint":"123"}
