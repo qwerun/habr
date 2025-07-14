@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/qwerun/habr-auth-go/internal/auth"
 	"github.com/qwerun/habr-auth-go/internal/dto"
 	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
@@ -67,13 +68,71 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	response := struct {
 		Access  string `json:"access"`
 		Refresh string `json:"refresh"`
-		FP      string `json:"fp"`
+		FP      string `json:"fingerprint"`
 	}{
 		Access:  access,
 		Refresh: refresh,
 		FP:      req.FingerPrint,
-	}
+	} // если бы это был не тестовый проект, то передавал бы refresh в куках с пометкой HttpOnly true и Secure true
 	if err = writeJSON(w, response, http.StatusOK); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
+	var req dto.Refresh
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Printf("Bad JSON: %v, Body: %v", err, r.Body)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	defer r.Body.Close()
+	if err = req.IsValid(); err != nil {
+		log.Printf("refresh: is valid error %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	claims, err := s.jwt.ParseAccess(req.Access)
+	switch {
+	case err == nil:
+	case errors.Is(err, jwt.ErrTokenExpired):
+	default:
+		log.Printf("refresh: ParseAccess error %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}
+
+	userId := claims.Subject
+	token, err := s.explorer.GetToken(userId, req.FingerPrint)
+	if err != nil || token != req.Refresh {
+		log.Printf("refresh: Failed to GetToken: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	access, refresh, err := s.jwt.NewPair(userId, req.FingerPrint)
+	if err != nil {
+		log.Printf("NewPair: Failed to NewPair: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	err = s.explorer.SaveToken(userId, req.FingerPrint, refresh, s.jwt.RefreshTtl)
+	if err != nil {
+		log.Printf("NewPair: Failed to SaveToken: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	response := struct {
+		Access  string `json:"access"`
+		Refresh string `json:"refresh"`
+		FP      string `json:"fingerprint"`
+	}{
+		Access:  access,
+		Refresh: refresh,
+		FP:      req.FingerPrint,
+	} // если бы это был не тестовый проект, то передавал бы refresh в куках с пометкой HttpOnly true и Secure true
+	if err = writeJSON(w, response, http.StatusOK); err != nil {
+		log.Printf("refresh: final error %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	}
 }

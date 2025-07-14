@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-type Manager interface {
-	NewPair(userID string, fp string) (access, refresh string, err error)
-	ParseAccess(t string) (*jwt.RegisteredClaims, error)
-}
-
 type JwtManager struct {
 	accessTtl  time.Duration
 	RefreshTtl time.Duration
@@ -59,15 +54,25 @@ func (m *JwtManager) NewPair(uid, fingerPrint string) (string, string, error) {
 }
 
 func (m *JwtManager) ParseAccess(t string) (*jwt.RegisteredClaims, error) {
-	token, err := jwt.ParseWithClaims(t, &jwt.RegisteredClaims{}, func(_ *jwt.Token) (any, error) {
-		return m.secret, nil
-	})
+	claims := &jwt.RegisteredClaims{}
+
+	_, err := jwt.ParseWithClaims(
+		t,
+		claims,
+		func(_ *jwt.Token) (any, error) { return m.secret, nil },
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+		jwt.WithoutClaimsValidation(),
+	)
 	if err != nil {
 		return nil, err
 	}
-	claims, ok := token.Claims.(*jwt.RegisteredClaims)
-	if !ok || !token.Valid {
-		return nil, errors.New("invalid token")
+
+	if claims.ExpiresAt == nil {
+		return nil, errors.New("missing exp")
 	}
+	if time.Now().After(claims.ExpiresAt.Time) {
+		return claims, jwt.ErrTokenExpired
+	}
+
 	return claims, nil
 }

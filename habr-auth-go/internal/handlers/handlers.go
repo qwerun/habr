@@ -17,6 +17,7 @@ func NewMux(explorer *user_repository.Repository, jwt *auth.JwtManager) (http.Ha
 	mux.HandleFunc("/api/v1/register", server.register)
 	mux.HandleFunc("/api/v1/verify-email", server.verify)
 	mux.HandleFunc("/api/v1/login", server.login)
+	mux.HandleFunc("/api/v1/refresh", server.refresh)
 	mux.HandleFunc("/api/v1/change-password", server.changePassword)
 	return onlyPOST(mux), nil
 }

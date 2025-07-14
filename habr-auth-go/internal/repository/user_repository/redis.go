@@ -37,13 +37,24 @@ func key(userID, fp string) string {
 	return fmt.Sprintf("refresh:%s:%s", userID, fp)
 }
 
-func (r *Repository) SaveToken(userId, fingerprint, token string, ttl time.Duration) error {
+func (r *Repository) SaveToken(userId, fingerPrint, token string, ttl time.Duration) error {
 	ctx := context.Background()
-	redisKey := key(userId, fingerprint)
+	redisKey := key(userId, fingerPrint)
 	err := r.redisExplorer.RDB.Set(ctx, redisKey, token, ttl).Err()
 	if err != nil {
 		log.Printf("SaveToken: Could not save value in Redis: %v", err)
 		return err
 	}
 	return nil
+}
+
+func (r *Repository) GetToken(userId, fingerPrint string) (string, error) {
+	ctx := context.Background()
+	redisKey := key(userId, fingerPrint)
+	token, err := r.redisExplorer.RDB.Get(ctx, redisKey).Result()
+	if err != nil {
+		log.Printf("GetToken: Could not get value in Redis: %v", err)
+		return "", err
+	}
+	return token, nil
 }
