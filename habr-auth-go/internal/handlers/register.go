@@ -19,6 +19,7 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 	if err = req.IsValid(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -76,6 +77,8 @@ func (s *Server) verify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
+
 	err = s.explorer.CheckVerificationCode(req.Email, req.Code)
 	if err != nil {
 		switch {

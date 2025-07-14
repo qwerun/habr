@@ -93,6 +93,27 @@ func (r *Repository) GetPassHash(email string) (string, error) {
 	return hash, nil
 }
 
+func (r *Repository) GetUserId(email string) (string, error) {
+	query := `
+        SELECT id
+          FROM users
+         WHERE email = $1 and is_verified = true
+    `
+	var id string
+
+	err := r.explorer.DB.QueryRowContext(context.Background(), query, email).Scan(&id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("GetUserId: no rows: %w", err)
+			return "", ErrBadRequest
+		}
+		log.Printf("GetUserId: scan row: %w", err)
+		return "", ErrBadRequest
+	}
+
+	return id, nil
+}
+
 func (r *Repository) SetNewHash(email, hash string) error {
 	query := `
         UPDATE users

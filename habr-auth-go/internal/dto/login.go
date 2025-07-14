@@ -5,11 +5,11 @@ import "errors"
 type Login struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
-	Fingerprint string `json:"fingerprint"`
+	FingerPrint string `json:"fingerprint"`
 }
 
 func (u *Login) IsValid() error {
-	if u.Email == "" || u.Password == "" || u.Fingerprint == "" {
+	if u.Email == "" || u.Password == "" || u.FingerPrint == "" {
 		return errors.New("Missing required fields")
 	}
 	return nil

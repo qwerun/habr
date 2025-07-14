@@ -18,6 +18,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 	if err = req.IsValid(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -40,4 +41,39 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id, err := s.explorer.GetUserId(req.Email)
+	if err != nil {
+		switch {
+		case errors.Is(err, user_repository.ErrBadRequest):
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	access, refresh, err := s.jwt.NewPair(id, req.FingerPrint)
+	if err != nil {
+		log.Printf("NewPair: Failed to NewPair: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	err = s.explorer.SaveToken(id, req.FingerPrint, refresh, s.jwt.RefreshTtl)
+	if err != nil {
+		log.Printf("NewPair: Failed to SaveToken: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	response := struct {
+		Access  string `json:"access"`
+		Refresh string `json:"refresh"`
+		FP      string `json:"fp"`
+	}{
+		Access:  access,
+		Refresh: refresh,
+		FP:      req.FingerPrint,
+	}
+	if err = writeJSON(w, response, http.StatusOK); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

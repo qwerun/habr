@@ -18,6 +18,7 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 	if err = req.IsValid(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
