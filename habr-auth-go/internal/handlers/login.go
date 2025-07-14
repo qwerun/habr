@@ -24,7 +24,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	hash, err := s.explorer.GetPassHash(req.Email)
+	hash, err := s.explorer.GetPassHash(r.Context(), req.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, user_repository.ErrBadRequest):
@@ -42,7 +42,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := s.explorer.GetUserId(req.Email)
+	id, err := s.explorer.GetUserId(r.Context(), req.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, user_repository.ErrBadRequest):
@@ -59,7 +59,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	err = s.explorer.SaveToken(id, req.FingerPrint, refresh, s.jwt.RefreshTtl)
+	err = s.explorer.SaveToken(r.Context(), id, req.FingerPrint, refresh, s.jwt.RefreshTtl)
 	if err != nil {
 		log.Printf("NewPair: Failed to SaveToken: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -104,7 +104,7 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId := claims.Subject
-	token, err := s.explorer.GetToken(userId, req.FingerPrint)
+	token, err := s.explorer.GetToken(r.Context(), userId, req.FingerPrint)
 	if err != nil || token != req.Refresh {
 		log.Printf("refresh: Failed to GetToken: %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -116,7 +116,7 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	err = s.explorer.SaveToken(userId, req.FingerPrint, refresh, s.jwt.RefreshTtl)
+	err = s.explorer.SaveToken(r.Context(), userId, req.FingerPrint, refresh, s.jwt.RefreshTtl)
 	if err != nil {
 		log.Printf("NewPair: Failed to SaveToken: %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)

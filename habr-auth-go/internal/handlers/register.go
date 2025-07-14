@@ -34,7 +34,7 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 
 	user := models.NewUser(req.Email, req.PasswordHash, req.Nickname)
 	var id string
-	if id, err = s.explorer.Create(user); err != nil {
+	if id, err = s.explorer.Create(r.Context(), user); err != nil {
 		switch {
 		case errors.Is(err, user_repository.ErrEmailAlreadyExists):
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -46,7 +46,7 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	code, err := s.explorer.SetVerificationCode(req.Email)
+	code, err := s.explorer.SetVerificationCode(r.Context(), req.Email)
 	if err != nil {
 		log.Printf("Failed to SetVerificationCode: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -79,7 +79,7 @@ func (s *Server) verify(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	err = s.explorer.CheckVerificationCode(req.Email, req.Code)
+	err = s.explorer.CheckVerificationCode(r.Context(), req.Email, req.Code)
 	if err != nil {
 		switch {
 		case errors.Is(err, user_repository.ErrCodeCheckNotFound):
@@ -89,7 +89,7 @@ func (s *Server) verify(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	err = s.explorer.VerifiedAccount(req.Email)
+	err = s.explorer.VerifiedAccount(r.Context(), req.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, user_repository.ErrVerifyAccount):

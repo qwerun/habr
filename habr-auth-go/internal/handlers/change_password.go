@@ -23,7 +23,7 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	hash, err := s.explorer.GetPassHash(req.Email)
+	hash, err := s.explorer.GetPassHash(r.Context(), req.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, user_repository.ErrBadRequest):
@@ -46,7 +46,7 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	err = s.explorer.SetNewHash(req.Email, newHashed)
+	err = s.explorer.SetNewHash(r.Context(), req.Email, newHashed)
 	if err != nil {
 		log.Printf("SetNewHash: Failed to set new hash password: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

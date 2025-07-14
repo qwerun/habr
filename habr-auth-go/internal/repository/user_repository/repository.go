@@ -18,7 +18,7 @@ var (
 	ErrBadRequest            = errors.New("Bad request")
 )
 
-func (r *Repository) Create(user *models.User) (string, error) {
+func (r *Repository) Create(ctx context.Context, user *models.User) (string, error) {
 	query := `
 		INSERT INTO users (email, password_hash, nickname)
 		VALUES ($1, $2, $3)
@@ -26,7 +26,7 @@ func (r *Repository) Create(user *models.User) (string, error) {
 	`
 	var id string
 	err := r.explorer.DB.QueryRowContext(
-		context.Background(),
+		ctx,
 		query,
 		user.Email,
 		user.PasswordHash,
@@ -48,13 +48,13 @@ func (r *Repository) Create(user *models.User) (string, error) {
 	return id, nil
 }
 
-func (r *Repository) VerifiedAccount(email string) error {
+func (r *Repository) VerifiedAccount(ctx context.Context, email string) error {
 	query := `
         UPDATE users
         SET is_verified = true
         WHERE email = $1
     `
-	res, err := r.explorer.DB.ExecContext(context.Background(), query, email)
+	res, err := r.explorer.DB.ExecContext(ctx, query, email)
 	if err != nil {
 		log.Printf("VerifiedAccount: unable to mark user %q as verified: %w", email, err)
 		return ErrVerifyAccount
@@ -72,7 +72,7 @@ func (r *Repository) VerifiedAccount(email string) error {
 	return nil
 }
 
-func (r *Repository) GetPassHash(email string) (string, error) {
+func (r *Repository) GetPassHash(ctx context.Context, email string) (string, error) {
 	query := `
         SELECT password_hash
           FROM users
@@ -80,7 +80,7 @@ func (r *Repository) GetPassHash(email string) (string, error) {
     `
 	var hash string
 
-	err := r.explorer.DB.QueryRowContext(context.Background(), query, email).Scan(&hash)
+	err := r.explorer.DB.QueryRowContext(ctx, query, email).Scan(&hash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Printf("GetPassHash: no rows: %w", err)
@@ -93,7 +93,7 @@ func (r *Repository) GetPassHash(email string) (string, error) {
 	return hash, nil
 }
 
-func (r *Repository) GetUserId(email string) (string, error) {
+func (r *Repository) GetUserId(ctx context.Context, email string) (string, error) {
 	query := `
         SELECT id
           FROM users
@@ -101,7 +101,7 @@ func (r *Repository) GetUserId(email string) (string, error) {
     `
 	var id string
 
-	err := r.explorer.DB.QueryRowContext(context.Background(), query, email).Scan(&id)
+	err := r.explorer.DB.QueryRowContext(ctx, query, email).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Printf("GetUserId: no rows: %w", err)
@@ -114,13 +114,13 @@ func (r *Repository) GetUserId(email string) (string, error) {
 	return id, nil
 }
 
-func (r *Repository) SetNewHash(email, hash string) error {
+func (r *Repository) SetNewHash(ctx context.Context, email, hash string) error {
 	query := `
         UPDATE users
         SET password_hash = $1
         WHERE email = $2
     `
-	res, err := r.explorer.DB.ExecContext(context.Background(), query, hash, email)
+	res, err := r.explorer.DB.ExecContext(ctx, query, hash, email)
 	if err != nil {
 		log.Printf("SetNewHash: unable to change hash password %q as verified: %w", email, err)
 		return ErrBadRequest
