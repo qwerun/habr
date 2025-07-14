@@ -1,16 +1,18 @@
 package handlers
 
 import (
+	"github.com/qwerun/habr-auth-go/internal/auth"
 	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
 	"net/http"
 )
 
 type Server struct {
 	explorer *user_repository.Repository
+	jwt      *auth.JwtManager
 }
 
-func NewMux(explorer *user_repository.Repository) (http.Handler, error) {
-	server := &Server{explorer: explorer}
+func NewMux(explorer *user_repository.Repository, jwt *auth.JwtManager) (http.Handler, error) {
+	server := &Server{explorer: explorer, jwt: jwt}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/register", server.register)
 	mux.HandleFunc("/api/v1/verify-email", server.verify)
