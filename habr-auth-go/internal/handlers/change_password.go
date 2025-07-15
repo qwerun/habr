@@ -57,5 +57,6 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = writeJSON(w, response, http.StatusOK); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }

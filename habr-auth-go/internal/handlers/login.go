@@ -101,6 +101,7 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 	default:
 		log.Printf("refresh: ParseAccess error %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	userId := claims.Subject
@@ -134,5 +135,6 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 	if err = writeJSON(w, response, http.StatusOK); err != nil {
 		log.Printf("refresh: final error %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 }

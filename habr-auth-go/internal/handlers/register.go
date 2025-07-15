@@ -50,11 +50,13 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Failed to SetVerificationCode: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
 	err = s.explorer.SendVerificationCode(req.Email, code)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
 	response := map[string]string{
@@ -63,6 +65,7 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 
 	if err = writeJSON(w, response, http.StatusOK); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -104,5 +107,6 @@ func (s *Server) verify(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = writeJSON(w, response, http.StatusOK); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
