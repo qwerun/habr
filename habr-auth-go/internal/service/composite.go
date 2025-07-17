@@ -1,5 +1,10 @@
 package service
 
+import (
+	"github.com/qwerun/habr-auth-go/internal/auth"
+	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
+)
+
 type CompositeService interface {
 	PasswordService
 	AuthService
@@ -12,10 +17,21 @@ type compositeService struct {
 	RegistrationService
 }
 
-func NewCompositeService() CompositeService {
+//func NewCompositeService() CompositeService {
+//	return &compositeService{
+//		PasswordService:     NewPasswordService(),
+//		AuthService:         NewAuthService(),
+//		RegistrationService: NewRegistrationService(),
+//	}
+//}
+
+func NewCompositeService(
+	repo *user_repository.Repository,
+	jwt *auth.JwtManager,
+) CompositeService {
 	return &compositeService{
-		PasswordService:     NewPasswordService(),
-		AuthService:         NewAuthService(),
-		RegistrationService: NewRegistrationService(),
+		PasswordService:     NewPasswordService(repo),
+		AuthService:         NewAuthService(repo, jwt),
+		RegistrationService: NewRegistrationService(repo),
 	}
 }

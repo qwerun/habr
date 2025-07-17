@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/qwerun/habr-auth-go/internal/auth"
 	"github.com/qwerun/habr-auth-go/internal/dto"
+	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
 )
 
 type AuthService interface {
@@ -11,8 +13,10 @@ type AuthService interface {
 }
 
 type authService struct {
+	repo *user_repository.Repository
+	jwt  *auth.JwtManager
 }
 
-func NewAuthService() AuthService {
-	return &authService{}
+func NewAuthService(repo *user_repository.Repository, jwt *auth.JwtManager) AuthService {
+	return &authService{repo: repo, jwt: jwt}
 }
