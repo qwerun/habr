@@ -7,22 +7,6 @@ import (
 	"net/http"
 )
 
-//type Server struct {
-//	explorer *user_repository.Repository
-//	jwt      *auth.JwtManager
-//}
-
-//func NewMux(explorer *user_repository.Repository, jwt *auth.JwtManager) (http.Handler, error) {
-//	server := &Server{explorer: explorer, jwt: jwt}
-//	mux := http.NewServeMux()
-//	mux.HandleFunc("/api/v1/register", server.register)
-//	mux.HandleFunc("/api/v1/verify-email", server.verify)
-//	mux.HandleFunc("/api/v1/login", server.login)
-//	mux.HandleFunc("/api/v1/refresh", server.refresh)
-//	mux.HandleFunc("/api/v1/change-password", server.changePassword)
-//	return onlyPOST(mux), nil
-//}
-
 type Server struct {
 	svc service.CompositeService
 }

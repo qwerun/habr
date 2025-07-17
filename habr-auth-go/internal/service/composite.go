@@ -17,14 +17,6 @@ type compositeService struct {
 	RegistrationService
 }
 
-//func NewCompositeService() CompositeService {
-//	return &compositeService{
-//		PasswordService:     NewPasswordService(),
-//		AuthService:         NewAuthService(),
-//		RegistrationService: NewRegistrationService(),
-//	}
-//}
-
 func NewCompositeService(
 	repo *user_repository.Repository,
 	jwt *auth.JwtManager,
