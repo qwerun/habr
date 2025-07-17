@@ -42,7 +42,7 @@ func (s *registrationService) Register(ctx context.Context, req dto.RegisterRequ
 	if err != nil {
 		return "", http.StatusInternalServerError, errors.New("Internal Server Error")
 	}
-	return id, http.StatusOK, errors.New("Register not implemented")
+	return id, http.StatusOK, nil
 }
 
 func (s *registrationService) Verify(ctx context.Context, email, code string) (int, error) {

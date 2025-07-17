@@ -8,8 +8,8 @@ import (
 )
 
 type AuthService interface {
-	Login(ctx context.Context, req dto.Login) (accessToken, refreshToken string, err error)
-	Refresh(ctx context.Context, req dto.Refresh) (newAccessToken, newRefreshToken string, err error)
+	Login(ctx context.Context, req dto.Login) (accessToken, refreshToken string, status int, err error)
+	Refresh(ctx context.Context, req dto.Refresh) (newAccessToken, newRefreshToken string, status int, err error)
 }
 
 type authService struct {

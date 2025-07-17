@@ -31,7 +31,6 @@ func NewMux(
 	repo *user_repository.Repository,
 	jwt *auth.JwtManager,
 ) (http.Handler, error) {
-
 	server := &Server{
 		svc: service.NewCompositeService(repo, jwt),
 	}

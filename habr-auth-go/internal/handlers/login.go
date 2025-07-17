@@ -2,11 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/qwerun/habr-auth-go/internal/auth"
 	"github.com/qwerun/habr-auth-go/internal/dto"
-	"github.com/qwerun/habr-auth-go/internal/repository/user_repository"
 	"log"
 	"net/http"
 )
@@ -24,47 +20,13 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	hash, err := s.explorer.GetPassHash(r.Context(), req.Email)
+	access, refresh, status, err := s.svc.Login(r.Context(), req)
 	if err != nil {
-		switch {
-		case errors.Is(err, user_repository.ErrBadRequest):
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
+		log.Printf("Login: s.svc.Login: error %v", err)
+		http.Error(w, err.Error(), status)
 		return
 	}
 
-	err = auth.CheckPasswordHash(hash, req.Password)
-	if err != nil {
-		log.Printf("login: Failed to CheckPasswordHash: %v", err)
-		http.Error(w, "Bad JSON", http.StatusBadRequest)
-		return
-	}
-
-	id, err := s.explorer.GetUserId(r.Context(), req.Email)
-	if err != nil {
-		switch {
-		case errors.Is(err, user_repository.ErrBadRequest):
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	access, refresh, err := s.jwt.NewPair(id, req.FingerPrint)
-	if err != nil {
-		log.Printf("NewPair: Failed to NewPair: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	err = s.explorer.SaveToken(r.Context(), id, req.FingerPrint, refresh, s.jwt.RefreshTtl)
-	if err != nil {
-		log.Printf("NewPair: Failed to SaveToken: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
 	response := struct {
 		Access  string `json:"access"`
 		Refresh string `json:"refresh"`
@@ -73,8 +35,8 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		Access:  access,
 		Refresh: refresh,
 		FP:      req.FingerPrint,
-	} // если бы это был не тестовый проект, то передавал бы refresh в куках с пометкой HttpOnly true и Secure true
-	if err = writeJSON(w, response, http.StatusOK); err != nil {
+	}
+	if err = writeJSON(w, response, status); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -93,36 +55,13 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
-	claims, err := s.jwt.ParseAccess(req.Access)
-	switch {
-	case err == nil:
-	case errors.Is(err, jwt.ErrTokenExpired):
-	default:
-		log.Printf("refresh: ParseAccess error %v", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	access, refresh, status, err := s.svc.Refresh(r.Context(), req)
+	if err != nil {
+		log.Printf("Refresh: s.svc.Refresh: error %v", err)
+		http.Error(w, err.Error(), status)
 		return
 	}
 
-	userId := claims.Subject
-	token, err := s.explorer.GetToken(r.Context(), userId, req.FingerPrint)
-	if err != nil || token != req.Refresh {
-		log.Printf("refresh: Failed to GetToken: %v", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	access, refresh, err := s.jwt.NewPair(userId, req.FingerPrint)
-	if err != nil {
-		log.Printf("NewPair: Failed to NewPair: %v", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	err = s.explorer.SaveToken(r.Context(), userId, req.FingerPrint, refresh, s.jwt.RefreshTtl)
-	if err != nil {
-		log.Printf("NewPair: Failed to SaveToken: %v", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
 	response := struct {
 		Access  string `json:"access"`
 		Refresh string `json:"refresh"`
@@ -131,8 +70,8 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 		Access:  access,
 		Refresh: refresh,
 		FP:      req.FingerPrint,
-	} // если бы это был не тестовый проект, то передавал бы refresh в куках с пометкой HttpOnly true и Secure true
-	if err = writeJSON(w, response, http.StatusOK); err != nil {
+	}
+	if err = writeJSON(w, response, status); err != nil {
 		log.Printf("refresh: final error %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return

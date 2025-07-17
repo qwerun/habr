@@ -19,7 +19,8 @@ curl -v -X POST http://localhost:8081/api/v1/verify-email -H "Content-Type: appl
 curl -v -X POST http://localhost:8081/api/v1/change-password -H "Content-Type: application/json"   -d '{"email": "abiojppppp@mail.com", "password": "Hewer)8p", "newPassword": "Hetui(112"}'
 Если в ответе возвращается {"success":true}  значит пароль успешно сменился
 
-6. После верификации аккаунта можно произвести авторизацию curl -v -X POST http://localhost:8081/api/v1/login -H "Content-Type: application/json" -d '{"email": "abiojppppp@mail.com", "password": "Hetui(112", "fingerprint": "123"}'
+6. После верификации аккаунта можно произвести авторизацию
+curl -v -X POST http://localhost:8081/api/v1/login -H "Content-Type: application/json" -d '{"email": "abiojppppp@mail.com", "password": "Hetui(112", "fingerprint": "123"}'
 В ответе вернется:
 {"access":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZjI2MmMyNS0zMzE4LTQ5ZDgtOTk2OS02N2Y0ZGNmNWJmMDUiLCJleHAiOjE3NTI0ODAyMDIsImlhdCI6MTc1MjQ3OTYwMiwianRpIjoiMTIzIn0.jncFY6vZAGoFKAxzOxw6Mv4pv4tNAFmmhNJPmEuFV9o",
 "refresh":"8BIdUvHdxKBqUbWGE8xwywmJFcKrtaYXNu_qes3BOpk","fingerprint":"123"}
